@@ -1,0 +1,6 @@
+[package]
+name = "tag_manager"
+version = "0.1.0"
+authors = ["steven.liatti <steven.liatti@etu.hesge.ch>"]
+
+[dependencies]
