@@ -5,3 +5,4 @@ authors = ["steven.liatti <steven.liatti@etu.hesge.ch>"]
 
 [dependencies]
 clap = "2"
+xattr = "0.2"
