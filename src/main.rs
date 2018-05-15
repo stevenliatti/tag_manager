@@ -68,12 +68,11 @@ fn main() {
             new_tags_u8.push(COMMA_ASCII_VALUE);
         }
 
-        // TODO: if existent tag, do not duplicate
         for &file in &files {
             let mut update_tags_u8 = new_tags_u8.clone();
             match xattr::get(file, ATTR_NAME) {
                 Ok(res) => match res {
-                    Some(get_tags) => 
+                    Some(get_tags) =>
                         for tag in get_tags {
                             update_tags_u8.push(tag);
                         },
@@ -82,9 +81,33 @@ fn main() {
                 Err(err) => println!("Error for file \"{}\" : {}", file, err)
             }
 
-            xattr::set(file, ATTR_NAME, &update_tags_u8).expect("Error when setting tag(s)");
+            let mut s = String::new();
+            let mut full_tags_str : Vec<String> = Vec::new();
+            for u in update_tags_u8.clone() {
+                if u == COMMA_ASCII_VALUE {
+                    full_tags_str.push(s.to_string());
+                    s = String::new();
+                }
+                else {
+                    s.push(u as char);
+                }
+            }
+            full_tags_str.push(s.to_string());
+            full_tags_str.sort();
+            full_tags_str.dedup();
+
+            let mut final_tags : Vec<u8> = Vec::new();
+            // Convert str tags to bytes
+            for tag in &full_tags_str {
+                for u in tag.bytes() {
+                    final_tags.push(u);
+                }
+                final_tags.push(COMMA_ASCII_VALUE);
+            }
+            final_tags.pop();
+            xattr::set(file, ATTR_NAME, &final_tags).expect("Error when setting tag(s)");
         }
-        println!("Add/update tag(s) {:?} for file(s) {:?}", tags, files);
+        println!("Add tag(s) {:?} for file(s) {:?}", tags, files);
     }
 
     // Delete case
@@ -104,7 +127,7 @@ fn main() {
             let mut existent_tags = Vec::new();
             match xattr::get(file, ATTR_NAME) {
                 Ok(res) => match res {
-                    Some(get_tags) => 
+                    Some(get_tags) =>
                         for tag in get_tags {
                             existent_tags.push(tag);
                         },
