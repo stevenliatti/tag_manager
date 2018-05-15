@@ -3,7 +3,7 @@ extern crate clap;
 use clap::{App, Arg, ArgGroup};
 
 const ATTR_NAME : &str = "user.tags";
-const COMMA_ASCII_VALUE : u8 = 44;
+const COMMA_ASCII_VALUE : u8 = ',' as u8;
 
 // TODO: where put type annotations in println ?
 fn str_to_vec(string: &str) -> Vec<&str> {
@@ -57,10 +57,11 @@ fn main() {
 
     // Set case
     if let Some(tags) = matches.values_of("set") {
-        let mut tags_args: Vec<&str> = tags.collect();
-
+        let mut tags: Vec<&str> = tags.collect();
         let mut new_tags_u8 : Vec<u8> = Vec::new();
-        for tag in &tags_args {
+
+        // Convert str tags to bytes
+        for tag in &tags {
             for u in tag.bytes() {
                 new_tags_u8.push(u);
             }
@@ -81,18 +82,74 @@ fn main() {
                 Err(err) => println!("Error for file \"{}\" : {}", file, err)
             }
 
-            xattr::set(file, ATTR_NAME, &update_tags_u8).expect("Error when setting tags");
-            println!("Add/update tag(s) {:?} for file(s) {:?}", tags_args, files);
+            xattr::set(file, ATTR_NAME, &update_tags_u8).expect("Error when setting tag(s)");
         }
+        println!("Add/update tag(s) {:?} for file(s) {:?}", tags, files);
     }
 
     // Delete case
     if let Some(tags) = matches.values_of("del") {
-        let tags: Vec<&str> = tags.collect();
-        // TODO: remove only given tags, not the entire extended attribute
-        for &file in &files {
-            xattr::remove(file, ATTR_NAME).expect("An error occurred when deleting a tag");
+        let tags_to_del: Vec<&str> = tags.collect();
+        let mut new_tags_u8 : Vec<u8> = Vec::new();
+
+        // Convert str tags to bytes
+        for tag in &tags_to_del {
+            for u in tag.bytes() {
+                new_tags_u8.push(u);
+            }
+            new_tags_u8.push(COMMA_ASCII_VALUE);
         }
-        println!("del tag(s) {:?} for file(s) {:?}", tags, files);
+
+        for &file in &files {
+            let mut existent_tags = Vec::new();
+            match xattr::get(file, ATTR_NAME) {
+                Ok(res) => match res {
+                    Some(get_tags) => 
+                        for tag in get_tags {
+                            existent_tags.push(tag);
+                        },
+                    None => println!("File \"{}\" has no tags", file)
+                },
+                Err(err) => {
+                    println!("Error for file \"{}\" : {}", file, err);
+                    return;
+                }
+            }
+
+            // Compute a Vec<String> to check existent tags
+            let mut s = String::new();
+            let mut existent_tags_str : Vec<String> = Vec::new();
+            for u in existent_tags {
+                if u == COMMA_ASCII_VALUE {
+                    existent_tags_str.push(s.to_string());
+                    s = String::new();
+                }
+                else {
+                    s.push(u as char);
+                }
+            }
+            existent_tags_str.push(s.to_string());
+
+            // Retain tags that must be effectively deleted
+            for tag in &tags_to_del {
+                existent_tags_str.retain(|ref e| e != &&tag.to_string());
+            }
+
+            // Delete the tags
+            xattr::remove(file, ATTR_NAME).expect("Error when deleting tag(s)");
+
+            // Readd the tags that are not in tags_to_del
+            let mut update_tags_u8 : Vec<u8> = Vec::new();
+            for tag in &existent_tags_str {
+                for u in tag.bytes() {
+                    update_tags_u8.push(u);
+                }
+                update_tags_u8.push(COMMA_ASCII_VALUE);
+            }
+            // remove last comma
+            update_tags_u8.pop();
+            xattr::set(file, ATTR_NAME, &update_tags_u8).expect("Error when (re)setting tag(s)");
+        }
+        println!("Delete tag(s) {:?} for file(s) {:?}", tags_to_del, files);
     }
 }
