@@ -2,7 +2,7 @@ extern crate xattr;
 extern crate clap;
 
 const ATTR_NAME : &str = "user.tags";
-const COMMA_ASCII_VALUE : u8 = ',' as u8;
+const SEPARATOR : u8 = ',' as u8;
 
 enum Operation { Get, Set, Delete }
 use Operation::*;
@@ -18,7 +18,7 @@ pub fn set_tags(files: &Vec<&str>, tags: clap::Values) {
     // Convert str tags to bytes
     for tag in &tags {
         for u in tag.bytes() { new_tags_u8.push(u); }
-        new_tags_u8.push(COMMA_ASCII_VALUE);
+        new_tags_u8.push(SEPARATOR);
     }
 
     for &file in files {
@@ -51,18 +51,12 @@ pub fn del_tags(files: &Vec<&str>, tags: clap::Values) {
     println!("Tag(s) {:?} for file(s) {:?} have been deleted", tags_to_del, files);
 }
 
-// TODO: where put type annotations in println ?
-fn str_to_vec(string: &str) -> Vec<&str> {
-    string.split(",").collect()
-}
-
 fn check_existent_tags(file: &str, operation: &Operation, existent_tags: &mut Vec<u8>) {
     match xattr::get(file, ATTR_NAME) {
         Ok(res) => match res {
             Some(tags) => {
                 match operation {
-                    &Get => println!("Tags {:?} for file \"{}\"", 
-                        str_to_vec(&String::from_utf8(tags).unwrap()), file),
+                    &Get => println!("Tags {:?} for file \"{}\"", vec_u8_to_vec_string(tags), file),
                     _ => for tag in tags { existent_tags.push(tag); }
                 }
             },
@@ -84,7 +78,7 @@ fn vec_string_to_vec_u8(tags_string: &Vec<String>) -> Vec<u8> {
     let mut tags_u8 : Vec<u8> = Vec::new();
     for tag in tags_string {
         for u in tag.bytes() { tags_u8.push(u); }
-        tags_u8.push(COMMA_ASCII_VALUE);
+        tags_u8.push(SEPARATOR);
     }
     // remove last comma
     tags_u8.pop();
@@ -95,7 +89,7 @@ fn vec_u8_to_vec_string(tags_u8: Vec<u8>) -> Vec<String> {
     let mut s = String::new();
     let mut tags_str : Vec<String> = Vec::new();
     for u in tags_u8 {
-        if u == COMMA_ASCII_VALUE {
+        if u == SEPARATOR {
             tags_str.push(s.to_string());
             s = String::new();
         }
