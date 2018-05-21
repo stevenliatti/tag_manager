@@ -29,6 +29,6 @@ fn main() {
     if !matches.is_present("set") && !matches.is_present("del") {
         tag_manager::get_tags(&files);
     }
-    if let Some(tags) = matches.values_of("set") { tag_manager::set_tags(&files, tags.collect()); }
-    if let Some(tags) = matches.values_of("del") { tag_manager::del_tags(&files, tags.collect()); }
+    if let Some(tags) = matches.values_of("set") { tag_manager::set_tags(&files, &tags.collect()); }
+    if let Some(tags) = matches.values_of("del") { tag_manager::del_tags(&files, &tags.collect()); }
 }
