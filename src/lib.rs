@@ -1,3 +1,5 @@
+use std::fs;
+
 extern crate xattr;
 extern crate clap;
 
@@ -7,24 +9,26 @@ const SEPARATOR : u8 = ',' as u8;
 enum Operation { Get, Set, Delete }
 use Operation::*;
 
-pub fn get_tags(files: &Vec<&str>) {
+pub fn get_tags(files: &Vec<String>, recursive: bool) {
     let mut empty : Vec<u8> = Vec::new();
-    for &file in files {
-        match check_existent_tags(file, &Get, &mut empty) { _ => continue }
+    for file in files {
+        recursion(file, recursive, Get, &vec![]);
+        match check_existent_tags(&file, &Get, &mut empty) { _ => continue }
     }
 }
 
-pub fn set_tags(files: &Vec<&str>, tags: &Vec<&str>) {
+pub fn set_tags(files: &Vec<String>, tags: &Vec<&str>, recursive: bool) {
     let mut new_tags_u8 : Vec<u8> = Vec::new();
     // Convert str tags to bytes
     for tag in tags {
         for u in tag.bytes() { new_tags_u8.push(u); }
         new_tags_u8.push(SEPARATOR);
     }
-    for &file in files {
+    for file in files {
+        recursion(file, recursive, Set, tags);
         let mut existent_tags = new_tags_u8.clone();
         // If needed, add existent tags to existent_tags in check_existent_tags()
-        match check_existent_tags(file, &Set, &mut existent_tags) {
+        match check_existent_tags(&file, &Set, &mut existent_tags) {
             Ok(_) => (),
             Err(_) => continue
         }
@@ -38,11 +42,12 @@ pub fn set_tags(files: &Vec<&str>, tags: &Vec<&str>) {
     println!("Tag(s) {:?} for file(s) {:?} have been setted", tags, files);
 }
 
-pub fn del_tags(files: &Vec<&str>, tags_to_del: &Vec<&str>) {
-    for &file in files {
+pub fn del_tags(files: &Vec<String>, tags_to_del: &Vec<&str>, recursive: bool) {
+    for file in files {
+        recursion(file, recursive, Delete, tags_to_del);
         let mut existent_tags = Vec::new();
         // If needed, add existent tags to existent_tags in check_existent_tags()
-        match check_existent_tags(file, &Delete, &mut existent_tags) {
+        match check_existent_tags(&file, &Delete, &mut existent_tags) {
             Ok(_) => (),
             Err(_) => continue
         }
@@ -57,6 +62,21 @@ pub fn del_tags(files: &Vec<&str>, tags_to_del: &Vec<&str>) {
         }
     }
     println!("Tag(s) {:?} for file(s) {:?} have been deleted", tags_to_del, files);
+}
+
+fn recursion(file: &String, recursive: bool, operation: Operation, tags: &Vec<&str>) {
+    if fs::metadata(file).unwrap().file_type().is_dir() && recursive {
+        let mut sub_files : Vec<String> = Vec::new();
+        for entry in fs::read_dir(&file).unwrap() {
+            let path = entry.unwrap().path();
+            sub_files.push(path.to_str().unwrap().to_string());
+        }
+        match operation {
+            Get => get_tags(&sub_files, recursive),
+            Set => set_tags(&sub_files, tags, recursive),
+            Delete => del_tags(&sub_files, tags, recursive)
+        }
+    }
 }
 
 fn check_existent_tags(file: &str, operation: &Operation, existent_tags: &mut Vec<u8>)
@@ -228,7 +248,7 @@ mod tests {
 
         let tags = vec!["bob", "max"];
         let tags_u8 = vec![98, 111, 98, super::SEPARATOR, 109, 97, 120];
-        super::set_tags(&vec![path], &tags);
+        super::set_tags(&vec![path.to_string()], &tags, false);
         if let Ok(res) = super::xattr::get(path, super::ATTR_NAME) {
             if let Some(tags) = res {
                 assert_eq!(tags, tags_u8);
@@ -236,7 +256,7 @@ mod tests {
         }
 
         // Reset the same tags to see if dedup work correctly
-        super::set_tags(&vec![path], &tags);
+        super::set_tags(&vec![path.to_string()], &tags, false);
         if let Ok(res) = super::xattr::get(path, super::ATTR_NAME) {
             if let Some(tags) = res {
                 assert_eq!(tags, tags_u8);
@@ -250,12 +270,12 @@ mod tests {
     fn del_tags() {
         let path = "/tmp/del_tags";
         File::create(path).expect("Error when creating file");
-        let files = vec![path];
+        let files : Vec<String> = vec![path.to_string()];
 
-        super::set_tags(&files, &vec!["bob", "max"]);
+        super::set_tags(&files, &vec!["bob", "max"], false);
 
         // Delete "bob"
-        super::del_tags(&files, &vec!["bob"]);
+        super::del_tags(&files, &vec!["bob"], false);
         let tags_u8 = vec![109, 97, 120];
         if let Ok(res) = super::xattr::get(path, super::ATTR_NAME) {
             if let Some(tags) = res {
