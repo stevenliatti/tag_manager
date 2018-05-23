@@ -1,3 +1,7 @@
+//! # Tag Manager API
+//! Here are the public functions for getting, setting and deleting tags on files given.
+//! The tags are stored in an extended attribute called "user.tags" and separated by comma.
+
 use std::fs;
 
 extern crate xattr;
@@ -9,6 +13,9 @@ const SEPARATOR : u8 = ',' as u8;
 enum Operation { Get, Set, Delete }
 use Operation::*;
 
+/// Print to stdout the tags (if there is at least one) associated with the files given.
+/// It print one line by file. The recursion in subtree is activated with `recursive` to true.
+/// The function print an error if the file is not found.
 pub fn get_tags(files: &Vec<String>, recursive: bool) {
     let mut empty : Vec<u8> = Vec::new();
     for file in files {
@@ -17,6 +24,9 @@ pub fn get_tags(files: &Vec<String>, recursive: bool) {
     }
 }
 
+/// Set given tags to given files. If a tag is already present, he's not added. Preserve existent
+/// tags. The recursion in subtree is activated with `recursive` to true.
+/// Print to stdout the new tags added to files.
 pub fn set_tags(files: &Vec<String>, tags: &Vec<&str>, recursive: bool) {
     let mut new_tags_u8 : Vec<u8> = Vec::new();
     // Convert str tags to bytes
@@ -42,6 +52,9 @@ pub fn set_tags(files: &Vec<String>, tags: &Vec<&str>, recursive: bool) {
     println!("Tag(s) {:?} for file(s) {:?} have been setted", tags, files);
 }
 
+/// Delete given tags of given files. Preserve other existent tags.
+/// The recursion in subtree is activated with `recursive` to true.
+/// Print to stdout the deleted tags.
 pub fn del_tags(files: &Vec<String>, tags_to_del: &Vec<&str>, recursive: bool) {
     for file in files {
         recursion(file, recursive, Delete, tags_to_del);

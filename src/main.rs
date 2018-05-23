@@ -1,3 +1,8 @@
+//! # Tag Manager
+//! Little CLI tool for getting, setting and deleting tags for files and folders.
+//! The tags are stored in an extended attribute called "user.tags" and separated by comma.
+//! Run `tag_manager -h` to see help.
+
 extern crate tag_manager;
 extern crate clap;
 use clap::{App, Arg, ArgGroup};
