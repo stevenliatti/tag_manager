@@ -10,7 +10,8 @@ use clap::{App, Arg, ArgGroup};
 fn main() {
     let matches = App::new("tag_manager")
         .help("\
-            tag_manager v0.1.0 - Manage your tags\n\n\
+            tag_manager v0.1.0\nManage your tags\nBy default, this tool store your tags \
+            in the extended attribute\n\"user.tags\" and separe them by a comma (\",\").\n\n\
             Usage:\n    tag_manager [Options] <files> [[--set|--del] <tags>]\n\n\
             Options:\n    \
             -h    Display this message\n    \
@@ -19,10 +20,10 @@ fn main() {
             -s, --set <tags>       Set the given tags\n    \
             -d, --del <tags>       Delete the given tags\n\n\
             Examples:\n    \
-            tag_manager myfile => Show the actual tags of file \"myfile\"\n    \
-            tag_manager myfile -s work => Set the tag \"work\" to the file \"myfile\"\n    \
-            tag_manager myfile -d work => Delete the tag \"work\" to the file \"myfile\"\n    \
-            tag_manager myfolder -r -s geneva => Set the tag \"geneva\" to the folder \"myfolder\" and his subtree")
+            tag_manager myfile                  => Show the actual tags of file \"myfile\"\n    \
+            tag_manager myfile -s work          => Set the tag \"work\" to the file \"myfile\"\n    \
+            tag_manager myfile -d work          => Delete the tag \"work\" to the file \"myfile\"\n    \
+            tag_manager myfolder -r -s geneva   => Set the tag \"geneva\" to the folder \"myfolder\" and his subtree")
         .group(ArgGroup::with_name("ops").args(&["set", "del"]))
         .arg(Arg::with_name("set").short("s").long("set").takes_value(true).multiple(true))
         .arg(Arg::with_name("del").short("d").long("del").takes_value(true).multiple(true))
