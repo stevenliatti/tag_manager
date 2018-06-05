@@ -6,6 +6,7 @@
 extern crate tag_manager;
 extern crate clap;
 use clap::{App, Arg, ArgGroup};
+use std::fs;
 
 fn main() {
     let matches = App::new("tag_manager")
@@ -33,24 +34,48 @@ fn main() {
 
     let files: Vec<&str> = matches.values_of("files").unwrap().collect();
     let recursive = matches.is_present("recursive");
-    
+
     if !matches.is_present("set") && !matches.is_present("del") {
-        tag_manager::get_tags(&vec_str_to_vec_string(&files), recursive);
+        for file in &files { show_tags(file, recursive); }
     }
 
     if let Some(tags) = matches.values_of("set") {
-        tag_manager::set_tags(&vec_str_to_vec_string(&files), &tags.collect(), recursive);
+        let tags : Vec<&str> = tags.collect();
+        let tags = &vec_str_to_vec_string(&tags);
+        for file in &files {
+            tag_manager::set_tags(file, tags, recursive);
+        }
     }
 
     if let Some(tags) = matches.values_of("del") {
-        tag_manager::del_tags(&vec_str_to_vec_string(&files), &tags.collect(), recursive);
+        let tags : Vec<&str> = tags.collect();
+        let tags = &vec_str_to_vec_string(&tags);
+        for file in &files {
+            tag_manager::del_tags(file, tags, recursive);
+        }
+    }
+}
+
+fn show_tags(file: &str, recursive: bool) {
+    match tag_manager::get_tags(file) {
+        Some(tags) => println!("Tag(s) {:?} for file \"{}\"", tags, file),
+        None => println!("File \"{}\" has no tags", file)
+    }
+    match fs::metadata(file) {
+        Ok(result) => {
+            if result.file_type().is_dir() && recursive {
+                for entry in fs::read_dir(file).unwrap() {
+                    let sub_file = entry.unwrap().path().to_str().unwrap().to_string();
+                    show_tags(&sub_file, recursive);
+                }
+            }
+        },
+        Err(err) => eprintln!("Error for file \"{}\" : {}", file, err)
     }
 }
 
 fn vec_str_to_vec_string(files: &Vec<&str>) -> Vec<String> {
     let mut new_files : Vec<String> = Vec::new();
-    for f in files {
-        new_files.push(f.to_string());
-    }
+    for f in files { new_files.push(f.to_string()); }
     new_files
 }
