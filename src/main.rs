@@ -7,6 +7,7 @@ extern crate tag_manager;
 extern crate clap;
 use clap::{App, Arg, ArgGroup};
 use std::fs;
+use std::collections::HashSet;
 
 fn main() {
     let matches = App::new("tag_manager")
@@ -40,16 +41,16 @@ fn main() {
     }
 
     if let Some(tags) = matches.values_of("set") {
-        let tags : Vec<&str> = tags.collect();
-        let tags = &vec_str_to_vec_string(&tags);
+        let tags : HashSet<&str> = tags.collect();
+        let tags = &hash_set_str_to_hash_set_string(&tags);
         for file in &files {
             tag_manager::set_tags(file, tags, recursive);
         }
     }
 
     if let Some(tags) = matches.values_of("del") {
-        let tags : Vec<&str> = tags.collect();
-        let tags = &vec_str_to_vec_string(&tags);
+        let tags : HashSet<&str> = tags.collect();
+        let tags = &hash_set_str_to_hash_set_string(&tags);
         for file in &files {
             tag_manager::del_tags(file, tags, recursive);
         }
@@ -74,8 +75,8 @@ fn show_tags(file: &str, recursive: bool) {
     }
 }
 
-fn vec_str_to_vec_string(files: &Vec<&str>) -> Vec<String> {
-    let mut new_files : Vec<String> = Vec::new();
-    for f in files { new_files.push(f.to_string()); }
+fn hash_set_str_to_hash_set_string(files: &HashSet<&str>) -> HashSet<String> {
+    let mut new_files : HashSet<String> = HashSet::new();
+    for f in files { new_files.insert(f.to_string()); }
     new_files
 }
