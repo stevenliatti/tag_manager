@@ -59,7 +59,11 @@ fn main() {
 
 fn show_tags(file: &str, recursive: bool) {
     match tag_manager::get_tags(file) {
-        Some(tags) => println!("Tag(s) {:?} for file \"{}\"", tags, file),
+        Some(tags) => {
+            let mut tags : Vec<String> = tags.into_iter().collect();
+            tags.sort();
+            println!("Tag(s) {:?} for file \"{}\"", tags, file);
+        },
         None => println!("File \"{}\" has no tags", file)
     }
     match fs::metadata(file) {
