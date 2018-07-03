@@ -15,7 +15,7 @@ use std::io::prelude::*;
 const SOCKET_ADDRESS : &str = "/tmp/tag_engine";
 const CODE_ENTRIES : &str = "0x0";
 const CODE_TAGS : &str = "0x1";
-// const CODE_RENAME_TAG : &str = "0x2";
+const CODE_RENAME_TAG : &str = "0x2";
 
 fn main() {
     // TODO: update help
@@ -41,9 +41,10 @@ fn main() {
         .arg(Arg::with_name("del").short("d").long("del").takes_value(true).multiple(true))
         .arg(Arg::with_name("files").takes_value(true).multiple(true).required(false))
         .arg(Arg::with_name("recursive").short("-r").long("--recursive"))
-        .group(ArgGroup::with_name("queries").args(&["list", "query"]))
+        .group(ArgGroup::with_name("queries").args(&["list", "query", "rename"]))
         .arg(Arg::with_name("query").short("-q").long("--query").takes_value(true))
-        .arg(Arg::with_name("list").short("-l").long("--list"))
+        .arg(Arg::with_name("list").short("-l").long("--list").takes_value(false))
+        .arg(Arg::with_name("rename").short("-R").long("--rename").number_of_values(2))
         .get_matches();
 
     if matches.is_present("files") {
@@ -70,7 +71,7 @@ fn main() {
             }
         }
     }
-    else if matches.is_present("list") || matches.is_present("query") {
+    else if matches.is_present("list") || matches.is_present("query") || matches.is_present("rename") {
         let mut code = String::new();
         if matches.is_present("query") {
             // TODO: improve queries, boolean logic, etc.
@@ -80,6 +81,13 @@ fn main() {
         }
         if matches.is_present("list") {
             code = String::from(CODE_TAGS);
+        }
+        if matches.is_present("rename") {
+            let query : Vec<&str> = matches.values_of("rename").unwrap().collect();
+            code = String::from(CODE_RENAME_TAG);
+            code.push_str(query[0]);
+            code.push(' ');
+            code.push_str(query[1]);
         }
 
         let mut stream = UnixStream::connect(SOCKET_ADDRESS).unwrap();

@@ -72,6 +72,25 @@ pub fn del_tags(file: &str, tags_to_del: &HashSet<String>, recursive: bool) {
     println!("Tag(s) {:?} for file {:?} have been deleted", tags_to_del, file);
 }
 
+pub fn rename_tag(file: &str, old : String, new : String) {
+    match check_existent_tags(file) {
+        Ok(res) => match res {
+            Some(mut tags) => {
+                if tags.remove(&old) {
+                    tags.insert(new.clone());
+                    xattr::set(file, ATTR_NAME, &hash_set_to_vec_u8(&tags))
+                        .expect("Error when setting tag(s)");
+                }
+            },
+            None => ()
+        },
+        Err(err) => {
+            eprintln!("Error for file \"{}\" : {}", file, err);
+            return;
+        }
+    }
+}
+
 fn recursion(file: &str, recursive: bool, operation: Operation, tags: &HashSet<String>) {
     if fs::metadata(file).unwrap().file_type().is_dir() && recursive {
         for entry in fs::read_dir(file).unwrap() {
