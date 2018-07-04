@@ -14,12 +14,12 @@ const SEPARATOR : u8 = ',' as u8;
 enum Operation { Set, Delete }
 use Operation::*;
 
-/// Return the tags (if there is at least one) associated with the file given. Print error 
+/// Return the tags (if there is at least one) associated with the file given. Print error
 /// on stderr if there is an error.
 pub fn get_tags(file: &str) -> Option<HashSet<String>> {
     match check_existent_tags(file) {
         Ok(res) => res,
-        Err(_) => None 
+        Err(_) => None
     }
 }
 
@@ -55,11 +55,16 @@ pub fn del_tags(file: &str, tags_to_del: &HashSet<String>, recursive: bool) {
         Ok(res) => match res {
             Some(mut tags) => {
                 // Delete only the given tags
-                for tag in tags_to_del { tags.retain(|ref e| e != &tag); }
+                for tag in tags_to_del {
+                    tags.retain(|ref e| e != &tag);
+                }
                 // To avoid to let an empty array of tags
-                if tags.is_empty() { match xattr::remove(file, ATTR_NAME) { _ => () } }
+                if tags.is_empty() {
+                    match xattr::remove(file, ATTR_NAME) { _ => () }
+                }
                 else {
-                    xattr::set(file, ATTR_NAME, &hash_set_to_vec_u8(&tags))
+                    xattr::set(file, ATTR_NAME,
+                        &hash_set_to_vec_u8(&tags))
                         .expect("Error when (re)setting tag(s)");
                 }
             }, _ => ()
@@ -69,9 +74,10 @@ pub fn del_tags(file: &str, tags_to_del: &HashSet<String>, recursive: bool) {
             return;
         }
     }
-    println!("Tag(s) {:?} for file {:?} have been deleted", tags_to_del, file);
+    println!("Tag(s) {:?} for file {:?} have been deleted",
+        tags_to_del, file);
 }
-
+// TODO: doc
 pub fn rename_tag(file: &str, old : String, new : String) {
     match check_existent_tags(file) {
         Ok(res) => match res {
