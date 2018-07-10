@@ -1,6 +1,8 @@
 //! # Tag Manager API
-//! Here are the public functions for getting, setting and deleting tags on files given.
-//! The tags are stored in an extended attribute called "user.tags" and separated by comma.
+//! Here are the public functions for getting, setting and deleting tags
+//! on files given.
+//! The tags are stored in an extended attribute called "user.tags" and
+//! separated by comma.
 
 use std::fs;
 use std::collections::HashSet;
@@ -14,8 +16,8 @@ const SEPARATOR : u8 = ',' as u8;
 enum Operation { Set, Delete }
 use Operation::*;
 
-/// Return the tags (if there is at least one) associated with the file given. Print error
-/// on stderr if there is an error.
+/// Return the tags (if there is at least one) associated with the file
+/// given. Print error on stderr if there is an error.
 pub fn get_tags(file: &str) -> Option<HashSet<String>> {
     match check_existent_tags(file) {
         Ok(res) => res,
@@ -23,8 +25,9 @@ pub fn get_tags(file: &str) -> Option<HashSet<String>> {
     }
 }
 
-/// Set given tags to given file. If a tag is already present, he's not added. Preserve existent
-/// tags. The recursion in subtree is activated with `recursive` to true.
+/// Set given tags to given file. If a tag is already present, he's not
+/// added. Preserve existent tags. The recursion in subtree is 
+/// activated with `recursive` to true.
 /// Print to stdout the new tags added to file.
 pub fn set_tags(file: &str, new_tags: &HashSet<String>, recursive: bool) {
     recursion(file, recursive, Set, new_tags);
@@ -77,7 +80,9 @@ pub fn del_tags(file: &str, tags_to_del: &HashSet<String>, recursive: bool) {
     println!("Tag(s) {:?} for file {:?} have been deleted",
         tags_to_del, file);
 }
-// TODO: doc
+
+/// Rename old tag with new tag of given file.
+/// Preserve other existent tags.
 pub fn rename_tag(file: &str, old : String, new : String) {
     match check_existent_tags(file) {
         Ok(res) => match res {
@@ -148,7 +153,7 @@ fn vec_u8_to_hash_set(tags_u8: Vec<u8>) -> HashSet<String> {
     tags_set
 }
 
-// -------------------------------------------- TESTS --------------------------------------------
+// ------------------------------ TESTS ------------------------------
 
 #[cfg(test)]
 mod tests {

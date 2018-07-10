@@ -1,7 +1,7 @@
 //! # Tag Manager
-//! Little CLI tool for getting, setting and deleting tags for files and folders.
-//! The tags are stored in an extended attribute called "user.tags" and separated by comma.
-//! Run `tag_manager -h` to see help.
+//! Little CLI tool for getting, setting and deleting tags for files 
+//! and folders. The tags are stored in an extended attribute called 
+//! "user.tags" and separated by comma. Run `tag_manager -h` to see help.
 
 extern crate tag_manager;
 extern crate clap;
@@ -18,22 +18,28 @@ const CODE_TAGS : &str = "0x1";
 const CODE_RENAME_TAG : &str = "0x2";
 
 fn main() {
-    // TODO: update help
     let help = "\
-        tag_manager v0.1.0\nManage your tags\nBy default, this tool store your tags \
-        in the extended attribute\n\"user.tags\" and separe them by a comma (\",\").\n\n\
-        Usage:\n    tag_manager [Options] <files> [[--set|--del] <tags>]\n\n\
+        tag_manager v0.1.0\nManage your tags\nBy default, this tool \
+        store your tags in the extended attribute\n\"user.tags\" and \
+        separe them by a comma (\",\").\n\n\
+        Usage:\n    \
+        tag_manager [Options] <files> [[--set|--del] <tags>]\n\n\
         Options:\n    \
         -h    Display this message\n    \
-        -r    Recursive option. Get, set or delete tags for each folder and file in folder subtree\n\n\
+        -r    Recursive option. Get, set or delete tags for each folder \
+        and file in folder subtree\n\n\
         Arguments:\n    \
         -s, --set <tags>       Set the given tags\n    \
         -d, --del <tags>       Delete the given tags\n\n\
         Examples:\n    \
-        tag_manager myfile                  => Show the actual tags of file \"myfile\"\n    \
-        tag_manager myfile -s work          => Set the tag \"work\" to the file \"myfile\"\n    \
-        tag_manager myfile -d work          => Delete the tag \"work\" to the file \"myfile\"\n    \
-        tag_manager myfolder -r -s geneva   => Set the tag \"geneva\" to the folder \"myfolder\" and his subtree";
+        tag_manager myfile                  => Show the actual tags of \
+        file \"myfile\"\n    \
+        tag_manager myfile -s work          => Set the tag \"work\" to \
+        the file \"myfile\"\n    \
+        tag_manager myfile -d work          => Delete the tag \"work\" \
+        to the file \"myfile\"\n    \
+        tag_manager myfolder -r -s geneva   => Set the tag \"geneva\" \
+        to the folder \"myfolder\" and his subtree";
     let matches = App::new("tag_manager")
         .help(help)
         .group(ArgGroup::with_name("ops").args(&["set", "del"]))
