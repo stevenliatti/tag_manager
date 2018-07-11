@@ -23,23 +23,31 @@ fn main() {
         store your tags in the extended attribute\n\"user.tags\" and \
         separe them by a comma (\",\").\n\n\
         Usage:\n    \
-        tag_manager [Options] <files> [[--set|--del] <tags>]\n\n\
+        tag_manager [Options] [[--recursive] --files <files> [[--set|--del] <tags>]] \
+        | [--query <query> | --list | --rename <old> <new>]\n\n\
         Options:\n    \
-        -h    Display this message\n    \
-        -r    Recursive option. Get, set or delete tags for each folder \
+        -h, --help         Display this message\n    \
+        -r, --recursive    Recursive option. Get, set or delete tags for each folder \
         and file in folder subtree\n\n\
         Arguments:\n    \
-        -s, --set <tags>       Set the given tags\n    \
-        -d, --del <tags>       Delete the given tags\n\n\
+        -f, --files <files>        List of files\n    \
+        -s, --set <tags>           Set the given tags\n    \
+        -d, --del <tags>           Delete the given tags\n    \
+        -q, --query <query>        A logical query to get files\n    \
+        -l, --list                 List of existent tags\n    \
+        -R, --rename <old> <new>   Rename tag, from <old> name to <new> name\n\n\
         Examples:\n    \
-        tag_manager myfile                  => Show the actual tags of \
+        tag_manager -f myfile                  => Show the actual tags of \
         file \"myfile\"\n    \
-        tag_manager myfile -s work          => Set the tag \"work\" to \
+        tag_manager -f myfile -s work          => Set the tag \"work\" to \
         the file \"myfile\"\n    \
-        tag_manager myfile -d work          => Delete the tag \"work\" \
+        tag_manager -f myfile -d work          => Delete the tag \"work\" \
         to the file \"myfile\"\n    \
-        tag_manager myfolder -r -s geneva   => Set the tag \"geneva\" \
-        to the folder \"myfolder\" and his subtree";
+        tag_manager -f myfolder -r -s geneva   => Set the tag \"geneva\" \
+        to the folder \"myfolder\" and his subtree\n    \
+        tag_manager -q bob AND fred OR max     => Show files corresponding to query\n    \
+        tag_manager -l                         => Show the list of existent tags\n    \
+        tag_manager -R old_name new_name       => Rename the tag \"old_name\" to \"new_name\"";
     let matches = App::new("tag_manager")
         .help(help)
         .group(ArgGroup::with_name("ops").args(&["set", "del"]))
